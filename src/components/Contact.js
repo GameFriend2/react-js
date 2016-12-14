@@ -1,115 +1,139 @@
 /**
- * Created by ktk61 on 2016-12-05.
+ * Created by ktk61 on 2016-12-14.
  */
 import React from 'react';
 import ContactInfo from './ContactInfo';
 import ContactDetails from './ContactDetails';
-import update from 'react-addons-update';
 import ContactCreate from './ContactCreate';
 
-export default class Contact extends React.Component{
+import update from 'react-addons-update';
 
-    constructor(props){
+export default class Contact extends React.Component {
+
+    constructor(props) {
         super(props);
         this.state = {
-            selectedkey : -1,
-            keyword:'',
-            contactData:[{
-                name : 'Abel',
-                phone : '010-0000-0001'
-            },{
-                name : 'Btos',
-                phone : '010-0000-0002'
-            },{
-                name : 'Casde',
-                phone : '010-0000-0003'
-            },{
-                name : 'David',
-                phone : '010-0000-0004'
+            selectedKey: -1,
+            keyword: '',
+            contactData: [{
+                name: 'Abet',
+                phone: '010-0000-0001'
+            }, {
+                name: 'Betty',
+                phone: '010-0000-0002'
+            }, {
+                name: 'Charlie',
+                phone: '010-0000-0003'
+            }, {
+                name: 'David',
+                phone: '010-0000-0004'
             }]
         };
+
         this.handleChange = this.handleChange.bind(this);
         this.handleClick = this.handleClick.bind(this);
-        this.handleCreate =this.handleCreate.bind(this);
+
+        this.handleCreate = this.handleCreate.bind(this);
         this.handleRemove = this.handleRemove.bind(this);
-        // this.handleEdit =this.handleEdit(this);
-    }
-
-    handleChange(e){
-        this.setState({
-            keyword:e.target.value
-    });
+        this.handleEdit = this.handleEdit.bind(this);
 
     }
-    handleClick(key){
+    componentWillMount(){
+     const contactData = localStorage.contactData;
+     if(contactData){
+         this.setState({
+             contactData : JSON.parse(contactData)
+         })
+     }
+    }
+    componentDidUpdate(prevProps, prevState){
+        if(JSON.stringify(prevState) != JSON.stringify(this.state.contactData)){
+            localStorage.contactData = JSON.stringify(this.state.contactData);
+        } ;
+    }
+
+    handleChange(e) {
         this.setState({
-            selectedkey:key
-        })
+            keyword: e.target.value
+        });
+    }
+
+    handleClick(key) {
+        this.setState({
+            selectedKey: key
+        });
+
+        console.log(key, 'is selected');
     }
 
     handleCreate(contact) {
         this.setState({
-            contactData: update(this.state.contactData, { $push : [contact]  })
-        })
+            contactData: update(this.state.contactData, { $push: [contact] })
+        });
     }
 
-    handleRemove(e){
+    handleRemove() {
+        if(this.state.selectedKey < 0) {
+            return;
+        }
+
         this.setState({
             contactData: update(this.state.contactData,
-                { $splice : [[this.state.selectedkey, 1]] }
-                ),
-                selectedkey: -1
-            });
+                { $splice: [[this.state.selectedKey, 1]] }
+            ),
+            selectedKey: -1
+        });
     }
-    // handleEdit(name, phone){
-    //     this.setState({
-    //         contactData: update(this.state.contactData,
-    //             {
-    //                 [this.state.selectedkey] : {
-    //                     name: {$set: name},
-    //                     phone: {$set: phone}
-    //                 }
-    //             }
-    //         )
-    //     })
-    // }
+    handleEdit(name, phone) {
+        this.setState({
+            contactData: update(this.state.contactData,
+                {
+                    [this.state.selectedKey]: {
+                        name: { $set: name },
+                        phone: { $set: phone }
+                    }
+                }
+            )
+        });
+    }
 
-    render(){
-        const mapToCompoenet = (data)=>{
+    render() {
+        const mapToComponents = (data) => {
             data.sort();
             data = data.filter(
-                (contact)=>{
+                (contact) => {
                     return contact.name.toLowerCase()
                             .indexOf(this.state.keyword.toLowerCase()) > -1;
                 }
             );
-            return data.map((contact, i)=>{
+            return data.map((contact, i) => {
                 return (<ContactInfo
                     contact={contact}
                     key={i}
                     onClick={() => this.handleClick(i)}/>);
             });
-
         };
 
-
-        return(
+        return (
             <div>
                 <h1>Contacts</h1>
                 <input
                     name="keyword"
-                    placeholder="search"
+                    placeholder="Search"
                     value={this.state.keyword}
                     onChange={this.handleChange}
                 />
-                <div>{mapToCompoenet(this.state.contactData)}</div>
+                <div>{mapToComponents(this.state.contactData)}</div>
                 <ContactDetails
-                    isSelected={this.state.selectedkey != -1}
-                    contact={this.state.contactData[this.state.selectedkey]}/>
+                    isSelected={this.state.selectedKey != -1}
+                    contact={this.state.contactData[this.state.selectedKey]}
+                    onRemove={this.handleRemove}
+                    onEdit={this.handleEdit}
+                />
                 <ContactCreate
                     onCreate={this.handleCreate}
                 />
             </div>
-        )
+        );
     }
 }
